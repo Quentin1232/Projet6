@@ -1,15 +1,34 @@
 const jwt = require("jsonwebtoken");
+require ("dotenv").config();
 
 module.exports = (req, res, next) => {
   try {
-    const token = req.headers.authorization.split(" ")[1]; // Nous extrayons le token du header Authorization de la requête entrante. N'oubliez pas qu'il contiendra également le mot-clé Bearer. Nous utilisons donc la fonction split pour tout récupérer après l'espace dans le header.
-    const decodedToken = jwt.verify(token, "RANDOM_TOKEN_SECRET"); //Nous utilisons ensuite la fonction verify pour décoder notre token. Si celui-ci n'est pas valide, une erreur sera générée.
-    const userId = decodedToken.userId; //Nous extrayons l'ID utilisateur de notre token et le rajoutons à l’objet Request afin que nos différentes routes puissent l’exploiter.
+
+    // Test fonctionnement .env
+    const test = process.env.TOKEN;
+    console.log (test);
+
+    // Récupération du token. La fonction split sert à tout récupérer après l'espace dans le header
+    const token = req.headers.authorization.split(" ")[1];
+    if ( !token ) {
+      return res.status(401).send({ error: 'Erreur de Token' });
+    }
+
+    // Décoder le token
+    const decodedToken = jwt.verify(token, test);
+    if ( !decodedToken ) {
+      return res.status(401).send({ error: 'Erreur de décodage du token' });
+    }
+
+    // Récupérer l'ID unique dans le token
+    const userId = decodedToken.userId;
+
+    // Ajout du token dans la requête
     req.auth = {
       userId: userId,
     };
     next();
   } catch (error) {
-    res.status(401).json({ error });
+    return res.status(401).send({ error: 'Erreur authentification id utilisateur' });
   }
 };

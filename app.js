@@ -4,6 +4,7 @@ const stuffRoutes = require("./routes/stuff");
 const userRoutes = require("./routes/user");
 const path = require("path");
 
+// Initialisation de mongoose
 mongoose
   .connect(
     "mongodb+srv://Quentin:Spectre.1@cluster0.o4paefw.mongodb.net/?retryWrites=true&w=majority",
@@ -15,15 +16,21 @@ mongoose
 const app = express();
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); //autorisation d'accès depuis n'importe quelle origine
+
+  // Autorisation d'accès depuis n'importe quelle origine
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  
+  // Ajouter les headers mentionnés aux requêtes envoyées vers notre API
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
-  ); // Ajouter les headers mentionnés aux requêtes envoyées vers notre API
+  );
+
+  // Envoyer des requêtes avec les méthodes mentionnées
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, PATCH, OPTIONS"
-  ); //envoyer des requêtes avec les méthodes mentionnées
+  );
   next();
 });
 

@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 
+// Création d'un nouveau schéma
 const thingSchema = mongoose.Schema({
-  name: { type: String, required: true }, //nom du champ: { type de champ, obligatoire? }
+  //nom du champ: { type de champ, obligatoire?, unique? }
+  name: { type: String, required: true },
   manufacturer: { type: String },
   description: { type: String, required: true },
   mainPepper: { type: String, required: true },
@@ -14,7 +16,8 @@ const thingSchema = mongoose.Schema({
   usersDisliked: { type: Array, required: false },
 });
 
-module.exports = mongoose.model("Thing", thingSchema); // Exporter le schéma et le rendre disponible pour Express
+// Exporter le schéma et le rendre disponible pour Express
+module.exports = mongoose.model("Thing", thingSchema);
 
 /*
 ● userId : String — l'identifiant MongoDB unique de l'utilisateur qui a créé la sauce
