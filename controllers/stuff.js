@@ -65,22 +65,27 @@ exports.modifyThing = (req, res, next) => {
     .catch((error) => {
       res.status(400).json({ error });
     });
-}; // Dans cette version modifiée de la fonction, on crée un objet thingObject qui regarde si req.file existe ou non. S'il existe, on traite la nouvelle image ; s'il n'existe pas, on traite simplement l'objet entrant. On crée ensuite une instance Thing à partir de thingObject, puis on effectue la modification. Nous avons auparavant, comme pour la route POST, supprimé le champ _userId envoyé par le client afin d’éviter de changer son propriétaire et nous avons vérifié que le requérant est bien le propriétaire de l’objet.
+}; // Création d'un objet thingObject regardant si req.file existe. S'il existe, on traite la nouvelle image ; s'il n'existe pas, on traite simplement l'objet entrant. On crée ensuite une instance Thing à partir de thingObject, puis on effectue la modification. Nous avons auparavant, comme pour la route POST, supprimé le champ _userId envoyé par le client afin d’éviter de changer son propriétaire et nous avons vérifié que le requérant est bien le propriétaire de l’objet.
 
 exports.deleteThing = (req, res, next) => {
-  Thing.findOne({ _id: req.params.id }) //Nous utilisons l'ID que nous recevons comme paramètre pour accéder au Thing correspondant dans la base de données.
+
+  // Utilisation de l'ID reçu comme paramètre pour accéder au Thing correspondant.
+  Thing.findOne({ _id: req.params.id }) 
     .then((thing) => {
+      // Vérification si utilisateur faisant la requête de suppression = celui qui a créé le Thing.
       if (thing.userId != req.auth.userId) {
-        // Nous vérifions si l’utilisateur qui a fait la requête de suppression est bien celui qui a créé le Thing.
         res.status(401).json({ message: "Not authorized" });
       } else {
-        const filename = thing.imageUrl.split("/images/")[1]; // Nous utilisons le fait de savoir que notre URL d'image contient un segment /images/ pour séparer le nom de fichier.
-        fs.unlink(`images/${filename}`, () => {
-          // Nous utilisons ensuite la fonction unlink du package fs pour supprimer ce fichier, en lui passant le fichier à supprimer et le callback à exécuter une fois ce fichier supprimé.
+
+        // Séparation du nom de fichier de l'URL.
+        const filename = thing.imageUrl.split("/images/")[1];
+          // Utilisation fonction unlink pour supprimer ce fichier
+          fs.unlink(`images/${filename}`, () => {
+          // Implémentation logique d'origine en supprimant le Thing de la base de données.
           Thing.deleteOne({ _id: req.params.id })
             .then(() => {
               res.status(200).json({ message: "Objet supprimé !" });
-            }) // Dans le callback, nous implémentons la logique d'origine en supprimant le Thing de la base de données.
+            })
             .catch((error) => res.status(401).json({ error }));
         });
       }
