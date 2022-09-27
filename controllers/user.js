@@ -42,7 +42,7 @@ exports.login = (req, res, next) => {
           //S'ils ne correspondent pas, erreur401 Unauthorized.
           if (!valid) {
 
-            // Le même message que lorsque utilisateur inconnu pour ne pas laisser quelqu’un vérifier si une autre personne est inscrite
+            // Même message que lorsque utilisateur inconnu pour ne pas laisser quelqu’un vérifier si une autre personne est inscrite
             return res.status(401).json({ error: "Mot de passe incorrect !" });
           }
 
