@@ -2,17 +2,28 @@ const Thing = require("../models/thing");
 const fs = require("fs");
 
 exports.createThing = (req, res, next) => {
-  const thingObject = JSON.parse(req.body.thing); // Pour ajouter un fichier à la requête, le front-end doit envoyer les données de la requête sous la forme form-data et non sous forme de JSON. Le corps de la requête contient une chaîne thing, qui est simplement un objetThing converti en chaîne. Nous devons donc l'analyser à l'aide de JSON.parse() pour obtenir un objet utilisable.
+  // Le corps de la requête contient un objetThing converti en chaîne.
+
+  // Analyse avec JSON.parse() pour obtenir un objet utilisable.
+  const thingObject = JSON.parse(req.body.thing);
   delete thingObject._id;
+
+  // Suppression du champ _userId de la requête car nous ne devons pas lui faire confiance.
   delete thingObject._userId;
-  const thing = new Thing({
-    // Nous supprimons le champ_userId de la requête envoyée par le client car nous ne devons pas lui faire confiance (rien ne l’empêcherait de nous passer le userId d’une autre personne). Nous le remplaçons en base de données par le _userId extrait du token par le middleware d’authentification.
+
+  // Remplacement en base de données par le _userId extrait du token.
+    const thing = new Thing({
     ...thingObject,
     userId: req.auth.userId,
+
+    // Résolution de l'URL complète de l'image, car req.file.filename ne contient que le segment filename. 
+    // Utilisation req.protocol pour obtenir 'http'.
+    // Ajout de '://', puis utilisation de req.get('host') pour résoudre l'hôte du serveur.
+    // Ajout final '/images/' et le nom de fichier pour compléter notre URL.
     imageUrl: `${req.protocol}://${req.get("host")}/images/${
       req.file.filename
-    }`, // Nous devons également résoudre l'URL complète de notre image, car req.file.filename ne contient que le segment filename. Nous utilisons req.protocol pour obtenir le premier segment (dans notre cas 'http'). Nous ajoutons '://', puis utilisons req.get('host') pour résoudre l'hôte du serveur (ici, 'localhost:3000'). Nous ajoutons finalement '/images/' et le nom de fichier pour compléter notre URL.
-  }); // En fait, nous effectuons une demande GET vers  http://localhost:3000/images/<image-name>.jpg. Cela semble simple, mais n'oubliez pas que notre application s'exécute sur localhost:3000 et nous ne lui avons pas indiqué comment répondre aux requêtes transmises à cette route : elle renvoie donc une erreur 404. Pour remédier à cela, nous devons indiquer à notre app.js comment traiter les requêtes vers la route /image, en rendant notre dossier images statique.
+    }`,
+  });
 
   thing
     .save()
@@ -39,16 +50,16 @@ exports.getOneThing = (req, res, next) => {
 };
 
 exports.modifyThing = (req, res, next) => {
-  const thingObject = req.file
-    ? {
+  // Création d'un objet thingObject regardant si req.file existe. Si oui, on traite la nouvelle image ; sinon, on traite simplement l'objet entrant.
+  const thingObject = req.file ? {
         ...JSON.parse(req.body.thing),
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
         }`,
-      }
-    : { ...req.body };
+      } : { ...req.body };
 
   delete thingObject._userId;
+  // Création d'une instance Thing à partir de thingObject, puis modification.
   Thing.findOne({ _id: req.params.id })
     .then((thing) => {
       if (thing.userId != req.auth.userId) {
@@ -65,7 +76,7 @@ exports.modifyThing = (req, res, next) => {
     .catch((error) => {
       res.status(400).json({ error });
     });
-}; // Création d'un objet thingObject regardant si req.file existe. S'il existe, on traite la nouvelle image ; s'il n'existe pas, on traite simplement l'objet entrant. On crée ensuite une instance Thing à partir de thingObject, puis on effectue la modification. Nous avons auparavant, comme pour la route POST, supprimé le champ _userId envoyé par le client afin d’éviter de changer son propriétaire et nous avons vérifié que le requérant est bien le propriétaire de l’objet.
+};
 
 exports.deleteThing = (req, res, next) => {
 
