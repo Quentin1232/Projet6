@@ -1,15 +1,14 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require('bcrypt');
-const User = require('../models/User')
+const bcrypt = require("bcrypt");
+const User = require("../models/User");
 
 exports.signup = (req, res, next) => {
-
   // Fonction de hachage
   bcrypt
 
     // Saler (crypter) 10 fois
     .hash(req.body.password, 10)
-    
+
     // création d'un utilisateur et enregistrement dans la base de données
     .then((hash) => {
       const user = new User({
@@ -28,20 +27,17 @@ exports.signup = (req, res, next) => {
 exports.login = (req, res, next) => {
   User.findOne({ email: req.body.email })
     .then((user) => {
-
       // Si adresse inconnue, erreur401
       if (!user) {
         return res.status(401).json({ error: "Utilisateur non trouvé !" });
       }
 
-    // Comparaison du mot de passe entré avec le hash enregistré
-    bcrypt
+      // Comparaison du mot de passe entré avec le hash enregistré
+      bcrypt
         .compare(req.body.password, user.password)
         .then((valid) => {
-
           //S'ils ne correspondent pas, erreur401 Unauthorized.
           if (!valid) {
-
             // Même message que lorsque utilisateur inconnu pour ne pas laisser quelqu’un vérifier si une autre personne est inscrite
             return res.status(401).json({ error: "Mot de passe incorrect !" });
           }
