@@ -3,9 +3,6 @@ require("dotenv").config();
 
 module.exports = (req, res, next) => {
   try {
-    // Test fonctionnement .env
-    const test = process.env.TOKEN;
-    console.log(test);
 
     // Récupération du token. La fonction split sert à tout récupérer après l'espace dans le header
     const token = req.headers.authorization.split(" ")[1];
@@ -14,7 +11,7 @@ module.exports = (req, res, next) => {
     }
 
     // Décoder le token
-    const decodedToken = jwt.verify(token, test);
+    const decodedToken = jwt.verify(token, process.env.token);
     if (!decodedToken) {
       return res
         .status(401)

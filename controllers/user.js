@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+require("dotenv").config();
 
 exports.signup = (req, res, next) => {
   // Fonction de hachage
@@ -47,7 +48,7 @@ exports.login = (req, res, next) => {
             userId: user._id,
 
             // La fonction sign de jsonwebtoken chiffre un nouveau token avec l'ID de l'utilisateur en tant que payload (les données encodées).
-            token: jwt.sign({ userId: user._id }, "RANDOM_TOKEN_SECRET", {
+            token: jwt.sign({ userId: user._id }, process.env.token, {
               expiresIn: "24h",
             }),
           });
