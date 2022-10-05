@@ -25,6 +25,7 @@ module.exports = (req, res, next) => {
         .status(401)
         .json({ error: error, msgErr: "Erreur ID utilisateur du token" });
     }
+    console.log(userId);
 
     // Ajout du token dans la requête
     req.auth = {
