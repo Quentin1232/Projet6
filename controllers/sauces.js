@@ -55,14 +55,15 @@ exports.createSauce = (req, res) => {
       .status(401)
       .json({ error: error, msgErr: "Erreur création objet" });
   }
+  console.log (sauce);
 
   // sauvegarde le nouvel element
   sauce
     .save()
     .then((createdSauce) =>
-      res.status(201).json({ message: "objet enregistrer", data: createdSauce })
+      res.status(201).json({ message: "objet enregistré", data: createdSauce })
     )
-    .catch((error) => res.status(400).json({ error }));
+    .catch((error) => res.status(400).json({ error: error, msgErr: 'Pourquoi ça marche pas ?' }));
 };
 
 exports.getOneSauce = (req, res, next) => {
@@ -80,23 +81,30 @@ exports.getOneSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
-  // Création d'un objet sauceObject regardant si req.file existe. Si oui, on traite la nouvelle image ; sinon, on traite simplement l'objet entrant.
-  const sauceObject = req.file
-    ? {
+  // Création d'un objet sauceObject regardant si req.file existe.
+  // Si oui, on traite la nouvelle image ; sinon, on traite simplement l'objet entrant.
+  const sauceObject = req.file ? {
         ...JSON.parse(req.body.sauce),
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${
-          req.file.filename
-        }`,
-      }
-    : { ...req.body };
+        
+        // Séparation du nom de fichier de l'URL.
+        //const filename = sauce.imageUrl.split("/images/")[1];
 
+        // Supprimer l'ancienne image
+        //fs.unlink(`images/${filename}`, () => {};  
+        
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${ req.file.filename }`,
+      }
+      : { ...req.body };
+      if (!sauceObject) {
+        alert ("problème sauce object");
+      }
   delete sauceObject._userId;
 
   // Création d'une instance Sauce à partir de sauceObject, puis modification.
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId != req.auth.userId) {
-        return res.status(401).json({ message: "Not authorized" });
+        return res.status(401).json({ error: error, msgErr: "Not authorized" });
       } else {
         Sauce.updateOne(
           { _id: req.params.id },
@@ -117,21 +125,21 @@ exports.deleteSauce = (req, res, next) => {
     .then((sauce) => {
       // Vérification si utilisateur faisant la requête de suppression = celui qui a créé le Sauce.
       if (sauce.userId != req.auth.userId) {
-        res.status(401).json({ message: "Not authorized" });
-      } else {
-        // Séparation du nom de fichier de l'URL.
-        const filename = sauce.imageUrl.split("/images/")[1];
-
-        // Utilisation fonction unlink pour supprimer ce fichier
-        fs.unlink(`images/${filename}`, () => {
-          // Implémentation logique d'origine en supprimant la Sauce de la base de données.
-          Sauce.deleteOne({ _id: req.params.id })
-            .then(() => {
-              res.status(200).json({ message: "Objet supprimé !" });
-            })
-            .catch((error) => res.status(401).json({ error }));
-        });
+        return res.status(401).json({ error: error, msgErr: "Not authorized" });
       }
+      // Séparation du nom de fichier de l'URL.
+      const filename = sauce.imageUrl.split("/images/")[1];
+
+      // Utilisation fonction unlink pour supprimer ce fichier
+      fs.unlink(`images/${filename}`, () => {
+
+        // Implémentation logique d'origine en supprimant la Sauce de la base de données.
+        Sauce.deleteOne({ _id: req.params.id })
+          .then(() => {
+            res.status(200).json({ message: "Objet supprimé !" });
+          })
+          .catch((error) => res.status(401).json({ error }));
+      });
     })
     .catch((error) => {
       res.status(500).json({ error });
