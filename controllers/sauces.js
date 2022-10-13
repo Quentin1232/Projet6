@@ -36,6 +36,13 @@ const fs = require("fs");
 };*/
 
 exports.createSauce = (req, res) => {
+
+  // Initialisation des likes
+  let dislikes = 0;
+  let likes = 0;
+  let usersDisliked = [];
+  let usersLiked = [];
+
   // récupère les information de la sauce dans une variable
   const sauces = JSON.parse(req.body.sauce);
   if (!sauces) {
@@ -55,7 +62,6 @@ exports.createSauce = (req, res) => {
       .status(401)
       .json({ error: error, msgErr: "Erreur création objet" });
   }
-  console.log (sauce);
 
   // sauvegarde le nouvel element
   sauce
