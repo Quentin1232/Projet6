@@ -21,6 +21,9 @@ router.put("/:id", auth, multer, sauceCtrl.modifySauce);
 // Supprimer un objet
 router.delete("/:id", auth, sauceCtrl.deleteSauce);
 
+// Ajouter un like/dislike
+router.post("/:id/like", auth, sauceCtrl.likeDislikeSauce);
+
 module.exports = router;
 
 // L'ordre des middlewares est important. Si multer avant l'authentification, alors les images non authentifiées seront enregistrées.

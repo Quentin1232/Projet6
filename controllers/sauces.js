@@ -163,3 +163,26 @@ exports.getAllSauces = (req, res, next) => {
       });
     });
 };
+
+exports.likeDislikeSauce = (req, res, next) => {
+  Sauce.findOne({ _id: req.params.id })
+  .then((sauce) => {
+    if (req.body.like != 1 || req.body.like != -1 || req.body.like != 0) {
+      return res.status(401).json({ error: error, msgErr: "Erreur de likes" });
+    } else {
+      if (req.body.like == 1) {
+        likes == likes + 1
+        usersLiked.push(req.body.userId)
+      }
+      if (req.body.like == -1) {
+        dislikes == dislikes + 1
+        usersDisliked.push(req.body.userId)
+      }
+    }
+    console.log(req.body);
+  })
+  .catch((error) => {
+    res.status(500).json({ error });
+  });
+}
+  
