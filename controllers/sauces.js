@@ -36,7 +36,6 @@ const fs = require("fs");
 };*/
 
 exports.createSauce = (req, res) => {
-
   // Initialisation des likes
   let dislikes = 0;
   let likes = 0;
@@ -69,7 +68,9 @@ exports.createSauce = (req, res) => {
     .then((createdSauce) =>
       res.status(201).json({ message: "objet enregistré", data: createdSauce })
     )
-    .catch((error) => res.status(400).json({ error: error, msgErr: 'Pourquoi ça marche pas ?' }));
+    .catch((error) =>
+      res.status(400).json({ error: error, msgErr: "Pourquoi ça marche pas ?" })
+    );
 };
 
 exports.getOneSauce = (req, res, next) => {
@@ -89,40 +90,47 @@ exports.getOneSauce = (req, res, next) => {
 exports.modifySauce = (req, res, next) => {
   // Création d'un objet sauceObject regardant si req.file existe.
   // Si oui, on traite la nouvelle image ; sinon, on traite simplement l'objet entrant.
-  const sauceObject = req.file ? {
+  const sauceObject = req.file
+    ? {
         ...JSON.parse(req.body.sauce),
-        
-        // Séparation du nom de fichier de l'URL.
-        //const filename = sauce.imageUrl.split("/images/")[1];
 
-        // Supprimer l'ancienne image
-        //fs.unlink(`images/${filename}`, () => {};  
-        
-        imageUrl: `${req.protocol}://${req.get("host")}/images/${ req.file.filename }`,
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
       }
-      : { ...req.body };
-      if (!sauceObject) {
-        alert ("problème sauce object");
-      }
+    : { ...req.body };
+  if (!sauceObject) {
+    alert("problème sauce object");
+  }
   delete sauceObject._userId;
 
   // Création d'une instance Sauce à partir de sauceObject, puis modification.
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
-      if (sauce.userId != req.auth.userId) {
-        return res.status(401).json({ error: error, msgErr: "Not authorized" });
+      if (sauce.userId === req.auth.userId) {
+        if (!req.file) {
+          Sauce.updateOne(
+            { _id: req.params.id },
+            { ...sauceObject, _id: req.params.id }
+          )
+            .then(() => res.status(200).json({ message: "Objet modifié !" }))
+            .catch((error) => res.status(400).json({ error }));
+        } else {
+          const filename = sauce.imageUrl.split("/images/")[1];
+          fs.unlink(`images/${filename}`, () => {
+            Sauce.updateOne(
+              { _id: req.params.id },
+              { ...sauceObject, _id: req.params.id }
+            )
+              .then(() => res.status(200).json({ message: "Objet modifié !" }))
+              .catch((error) => res.status(400).json({ error }));
+          });
+        }
       } else {
-        Sauce.updateOne(
-          { _id: req.params.id },
-          { ...sauceObject, _id: req.params.id }
-        )
-          .then(() => res.status(200).json({ message: "Objet modifié!" }))
-          .catch((error) => res.status(401).json({ error }));
+        res.status(401).json({ message: "Unauthorized request !" });
       }
     })
-    .catch((error) => {
-      res.status(400).json({ error });
-    });
+    .catch((error) => res.status(500).json({ error }));
 };
 
 exports.deleteSauce = (req, res, next) => {
@@ -138,7 +146,6 @@ exports.deleteSauce = (req, res, next) => {
 
       // Utilisation fonction unlink pour supprimer ce fichier
       fs.unlink(`images/${filename}`, () => {
-
         // Implémentation logique d'origine en supprimant la Sauce de la base de données.
         Sauce.deleteOne({ _id: req.params.id })
           .then(() => {
@@ -166,23 +173,43 @@ exports.getAllSauces = (req, res, next) => {
 
 exports.likeDislikeSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
-  .then((sauce) => {
-    if (req.body.like != 1 || req.body.like != -1 || req.body.like != 0) {
-      return res.status(401).json({ error: error, msgErr: "Erreur de likes" });
-    } else {
+    .then(() => {
+      //Si l'utilisateur a déjà un like (=0)
+      if (req.body.like == 0) {
+        // l'utilisateur avait liké ?
+        if (usersLiked.include(userId)) {
+          likes = likes - 1;
+          usersLiked.splice(userId);
+        }
+        // L'utilisateur avait disliké ?
+        if (usersDisliked.include(userId)) {
+          dislikes = dislikes - 1;
+          usersDisliked.splice(userId);
+        }
+        else {
+          return res
+            .status(401)
+            .json({ error: error, msgErr: "Erreur de likes" });
+        }
+      }
+
+      //si like
       if (req.body.like == 1) {
-        likes == likes + 1
-        usersLiked.push(req.body.userId)
+        likes = likes + 1;
+        usersLiked.push(req.body.userId);
       }
+      // si dislike
       if (req.body.like == -1) {
-        dislikes == dislikes + 1
-        usersDisliked.push(req.body.userId)
+        dislikes = dislikes + 1;
+        usersLiked.push(req.body.userId);
+      } else {
+        return res
+          .status(401)
+          .json({ error: error, msgErr: "Erreur valeur de like" });
       }
-    }
-    console.log(req.body);
-  })
-  .catch((error) => {
-    res.status(500).json({ error });
-  });
-}
-  
+      console.log(req.body);
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
+};
