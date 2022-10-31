@@ -210,6 +210,7 @@ exports.likeDislikeSauce = (req, res, next) => {
       console.log(req.body);
     })
     .catch((error) => {
-      res.status(500).json({ error });
+      console.log(req.params.id)
+      res.status(500).json({ error: error, msgErr: "Erreur ailleurs" });
     });
 };
