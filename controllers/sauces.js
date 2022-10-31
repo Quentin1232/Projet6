@@ -36,12 +36,6 @@ const fs = require("fs");
 };*/
 
 exports.createSauce = (req, res) => {
-  // Initialisation des likes
-  let dislikes = 0;
-  let likes = 0;
-  let usersDisliked = [];
-  let usersLiked = [];
-
   // récupère les information de la sauce dans une variable
   const sauces = JSON.parse(req.body.sauce);
   if (!sauces) {
@@ -171,7 +165,7 @@ exports.getAllSauces = (req, res, next) => {
     });
 };
 
-exports.likeDislikeSauce = (req, res, next) => {
+exports.likeDislikeSauce = async (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then(() => {
       //Si l'utilisateur a déjà un like (=0)
