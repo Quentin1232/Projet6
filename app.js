@@ -7,7 +7,7 @@ const path = require("path");
 // Initialisation de mongoose
 mongoose
   .connect(
-    'mongodb+srv://Quentin:Spectre.1@cluster1.tbenoxy.mongodb.net/?retryWrites=true&w=majority',
+    'mongodb+srv://Quentin:Spectre.1@cluster0.d3f0t4j.mongodb.net/?retryWrites=true&w=majority',
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(() => console.log("Connexion à MongoDB réussie !"))
